@@ -1,0 +1,14 @@
+mirë dita, guàtertag, Прывiтанне, idh-iyessbhène, добър ден, 好, annyǒng hashimnikka, salâm, buenos días, hyvää päivää, gùtte Mòrje, mba'éichapa, jó napot kívánok, goðan dagin, konnichi wa ohayô, ciâo, merħba, Сайн байна уу, né yibéogo, buïjort, dzień dobry, latcho divès, bună ziua, Добрый день, jéjé, dobrý den, สวัสดีครับ, günaydin, dzéchbur, Привiт, chào, bondjoû, سلام
+
+bref, bonjour!
+
+Bienvenu dans DactyloPy, logiciel d'entrainement à la dactylographie.
+
+Il vous permettra d'améliorer votre technique et votre culture générale en parcourant les grands classiques disponibles par exemple sur Project Gutenberg (https://www.gutenberg.org/) ou tout autre texte au format .txt (ou du code en n'importe quel langage mais vous n'aurez pas la coloration syntaxique).
+
+Même si quelques exercices pour les claviers en disposition bépo (exobepo.txt) sont disponibles vous devriez vous diriger vers d'autres logiciels pour maitriser la technique de base (Klavaro, KTouch, et bien d'autres).
+
+DactyloPy reprend le concept de AmpheType (https://github.com/webiest/amphetype) mais permet aux non-anglophones d'afficher leurs caractères spéciaux.
+
+- Cliquer sur l'onglet 'Profil' pour créer ou charger un profil personnel qui stockera vos préférences, performances et positions dans les textes que vous ouvrirez. Ou vous pouvez directement
+- Cliquez sur l'onglet 'Texte' et choisissez un fichier. Selectionnez une partie du texte ou commencez à l'endroit de votre choix (d'un clic), le chronomètre se déclenchera dès la première frappe et stoppera à la fin du texte ou si vous appuyez sur la touche 'échappe'. La position finale du curseur est mémorisée pour la prochaine utilisation du texte.
