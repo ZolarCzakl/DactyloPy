@@ -14,27 +14,28 @@ from tkinter import messagebox
 
 
 def affichage(text, debut='1.0'):
+    """Affiche le texte sélectionné"""
     page.config(state=NORMAL)
     page.delete(1.0, END)
     page.insert(1.0, text)
     if protected.get():
         page.config(state=DISABLED)
-    page.mark_set("insert", debut)
-    page.tag_add('now', INSERT, INSERT + "+1c")
-    page.see("insert")
-    page.focus_force()
-    first_key.set(True)
-    frappes.set(0)
-    erreurs.set(0)
-    ligne.set(0)
-    caractere.set(0)
-    if pop_up.get():
-        if input_mode.get():
-            starting.set(True)
-            pass
-        elif starting.get():
-            starting.set(False)
-        else:
+    else:
+        page.mark_set("insert", debut)
+        page.tag_add('now', INSERT, INSERT + "+1c")
+        page.see("insert")
+        page.focus_force()
+        first_key.set(True)
+        frappes.set(0)
+        erreurs.set(0)
+        ligne.set(0)
+        caractere.set(0)
+        if pop_up.get():
+            if input_mode.get():
+                starting.set(True)
+                pass
+            elif starting.get():
+                starting.set(False)
             messagebox.showinfo('Info',
                                 'Sélectionnez une partie du texte\n'
                                 'ou commencez à taper\n'
@@ -42,6 +43,7 @@ def affichage(text, debut='1.0'):
             pop_up.set(False)
 
 def chargement():
+    """sélection d'un texte"""
     protected.set(False)
     input_mode.set(False)
     adresse.set(filedialog.askopenfilename())
@@ -52,7 +54,6 @@ def chargement():
             debut = ''
             with open(adresse.get()) as text_brut:
                 text = text_brut.read()
-            total_car = len(text)
             status.set('ouvrir')
             debut = save(debut)
             affichage(text, debut)
@@ -62,27 +63,29 @@ def chargement():
             affichage(text)
 
 def profil_load(profil_index):
+    """Charge le profil choisi dans la barre de menu"""
     pseudo.set(list_pseudo[profil_index])
     text = ('Bonjour {}, choisissez un texte et commencez votre entraînement'
             .format(pseudo.get()))
     protected.set(True)
     starting.set(True)
+    pop_up.set(False)
     affichage(text)
 
 def nouveau():
+    """Création d'un nouveau profil"""
     text = 'Bienvenu,\n\nEntrez un pseudo ci-dessous:\n'
     input_mode.set(True)
     protected.set(False)
     affichage(text, '6.0')
 
 def pickle_access(debut):
+    """Sauvegarde la position dans le texte courant"""
     with open('save.pkl', 'rb') as save_file:
         repertoire = pickle.load(save_file)
-        print(repertoire)
     with open('save.pkl', 'wb') as save_file:
         repertoire[pseudo.get()]['text'][adresse.get()] = debut
         pickle.dump(repertoire, save_file)
-        print(repertoire)
 
 def save(debut):
     """Sauvegarde ou renvoi l'emplacement du curseur dans le texte."""
@@ -101,21 +104,26 @@ def save(debut):
         pickle_access(debut)
 
 def selection(event):
-    try:
-        page.get(SEL_FIRST, SEL_LAST)
-        answer = messagebox.askyesno('selection', 
-             'Utiliser cette sélection pour votre entraînement?',
-             icon='question')
-        if answer:
-            debut = page.index(SEL_FIRST)
-            debut_sel.set(debut)
-            affichage(page.get(SEL_FIRST, SEL_LAST))
-            status.set('selection_start')
-            save(debut)            
-    except:
+    """Sélectionne une partie du texte pour l'entraînement"""
+    if protected.get():
         pass
+    else:
+        try:
+            page.get(SEL_FIRST, SEL_LAST)
+            answer = messagebox.askyesno('selection', 
+                 'Utiliser cette sélection pour votre entraînement?',
+                 icon='question')
+            if answer:
+                debut = page.index(SEL_FIRST)
+                debut_sel.set(debut)
+                affichage(page.get(SEL_FIRST, SEL_LAST))
+                status.set('selection_start')
+                save(debut)            
+        except:
+            pass
 
 def chrono(start_stop):
+    """Déclenche et stoppe le chronomètre, calcul le score final"""
     if input_mode.get():
         pass
     elif start_stop == 'start':
@@ -147,19 +155,26 @@ def chrono(start_stop):
 
                       """
             ).format(score, erreurs.get(), precision, mn, sec)
-            text2 = ("Détails des erreurs:\n")
-            sorted_collec = sorted([key for key in error_collec])
-            for i in sorted_collec:
-                car = i
-                if i == ' ':
-                    car = '[esp]'
-                text2 += "à la place de {}, vous avez tapé {}\n".format(
-                    car, str(error_collec[i]))
+            if erreurs.get() == 0:
+                text2 = "Parfait, aucune erreur"
+            else:
+                text2 = ("Erreurs fréquentes:\n")
+                sorted_collec = sorted([key for key in error_collec])
+                for i in sorted_collec:
+                    if len(error_collec[i]) < 2:
+                        pass
+                    else:
+                        car = i
+                        if i == ' ':
+                            car = '[esp]'
+                        text2 += ("à la place de [{}], vous avez tapé {}\n"
+                        ).format(car, str(error_collec[i]))
             text = text1 + text2
             protected.set(True)
             affichage(text)
 
 def stop_chrono(event):
+    """Stopper l'entraînement avec la touche échappe"""
     answer = messagebox.askyesno('Stop?',
                                  "Stopper l’entraînement?",
                                  icon='question')
@@ -167,15 +182,21 @@ def stop_chrono(event):
         chrono('stop')
 
 def now(event):
-    page.tag_remove('now', 1.0, END)
-    page.tag_add('now', CURRENT, CURRENT + "+1c")    
+    """Tag de la position courante du curseur"""
+    if protected.get():
+        pass
+    else:
+        page.tag_remove('now', 1.0, END)
+        page.tag_add('now', CURRENT, CURRENT + "+1c")    
 
 def good(ici):
+    """Tag des lettres correctes déjà tapées"""
     page.tag_remove('now', 1.0, END)
     page.tag_add('now', ici, ici + "+1c")
     page.tag_add('good', INSERT, ici)    
 
 def wrong(ici):
+    """Tag des erreurs"""
     page.tag_remove('now', 1.0, END)
     page.tag_add('now', ici, ici + "+1c")
     page.tag_add('wrong', INSERT, ici)
@@ -198,10 +219,10 @@ def check(event):
         return "break"
     else:
         erreurs.set(erreurs.get() + 1)
+        missed = page.get(INSERT, INSERT + "+1c")
         page.mark_set("ici", INSERT + "+1c")
         wrong('ici')
-        page.mark_set("insert", INSERT + "+1c")
-        missed = page.get(INSERT, INSERT + "+1c")
+        page.mark_set("insert", INSERT + "+1c")        
         if missed in error_collec:
             error_collec[missed].append(event.char)
         else:
@@ -226,11 +247,12 @@ def retour(event):
                     'choisissez un texte et commencez votre entraînement')
             protected.set(True)
             starting.set(True)
+            pop_up.set(True)
             affichage(text)
         else:
             nouveau()
 
-    if page.get(INSERT, INSERT + "+1c") == '\n':
+    elif page.get(INSERT, INSERT + "+1c") == '\n':
         frappes.set(frappes.get() + 1)
         ligne.set(ligne.get() + 1)
         caractere.set(0)
@@ -305,7 +327,7 @@ caractere = IntVar()
 pseudo = StringVar()
 starting.set(True)
 pop_up.set(True)
-protected.set(False)
+protected.set(True)
 input_mode.set(False)
 pseudo.set('Anonyme')
 
@@ -350,6 +372,11 @@ info = ttk.Label(status_bar, text="Nombre de frappes: ")
 info.grid(column=0, row=0, sticky=(W))
 nb_frappe = ttk.Label(status_bar, textvariable=frappes)
 nb_frappe.grid(column=1, row=0, sticky=(W))
+info2 = ttk.Label(status_bar, text="    Profil actuel: ")
+info2.grid(column=2, row=0, sticky=(W))
+pseudo_actuel = ttk.Label(status_bar, textvariable=pseudo)
+pseudo_actuel.grid(column=3, row=0, sticky=(W))
+
 
 page.bind('<Key>', check)
 page.bind('<Button-1>', now)
