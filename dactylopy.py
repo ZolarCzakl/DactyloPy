@@ -19,6 +19,14 @@ def affichage(text, debut='1.0'):
     page.delete(1.0, END)
     page.insert(1.0, text)
     if protected.get():
+        if status.get() == 'result':
+            page.tag_add('now', 1.0, '1.14')
+            page.tag_add('good', '4.18', '4.54')
+        elif status.get() == 'accueil':
+            page.tag_add('now', '8.13', '8.22')
+            page.tag_add('now', '18.0', '18.9')
+            page.tag_add('good', '6.6', '6.13')
+            
         page.config(state=DISABLED)
     else:
         page.mark_set("insert", debut)
@@ -77,6 +85,7 @@ def nouveau():
     text = 'Bienvenu,\n\nEntrez un pseudo ci-dessous:\n'
     input_mode.set(True)
     protected.set(False)
+    pop_up.set(False)
     affichage(text, '6.0')
 
 def pickle_access(debut):
@@ -170,6 +179,7 @@ def chrono(start_stop):
                         text2 += ("à la place de [{}], vous avez tapé {}\n"
                         ).format(car, str(error_collec[i]))
             text = text1 + text2
+            status.set('result')
             protected.set(True)
             affichage(text)
 
@@ -366,6 +376,8 @@ page.tag_config('now', background='yellow')
 page.tag_config('good', background='#34FF34')
 page.tag_config('wrong', background='red')
 
+root.resizable(width=False, height=False)
+
 status_bar = ttk.Frame(root, borderwidth=1, relief=SUNKEN)
 status_bar.grid(column=0, row=1, sticky=(E,W))
 info = ttk.Label(status_bar, text="Nombre de frappes: ")
@@ -388,10 +400,12 @@ page.bind('<Escape>', stop_chrono)
 try:
     text = open('accueil.txt')
     text = text.read()
+    status.set('accueil')
 except:
     text = """Bienvenu dans DactyloPy
 
     Créez ou charger un profil ou sélectionnez un texte et commencez à taper."""
+
 affichage(text)
 
 root.mainloop()
