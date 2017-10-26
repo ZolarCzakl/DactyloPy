@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Logiciel d’entraînement à la dactylographie.
 Optimisé pour les romans et le respect des caractères spéciaux.
