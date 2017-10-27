@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """
 Logiciel d’entraînement à la dactylographie.
 Optimisé pour les romans et le respect des caractères spéciaux.
@@ -14,6 +15,18 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 
+preferenece = {}
+error_collec = {}
+
+def pickle_load():
+    with open('save.pkl', 'rb') as save_file:
+            repertoire = pickle.load(save_file)
+    return repertoire
+    
+def pickle_write(repertoire):
+    with open('save.pkl', 'wb') as save_file:
+        pickle.dump(repertoire, save_file)
+    
 def affichage(text, debut='1.0'):
     """Affiche le texte sélectionné"""
     page.config(state=NORMAL)
@@ -27,8 +40,13 @@ def affichage(text, debut='1.0'):
             page.tag_add('now', '8.13', '8.22')
             page.tag_add('now', '18.0', '18.9')
             page.tag_add('good', '6.6', '6.13')
+        elif status.get() == 'load':
+            car = len(pseudo.get())
+            page.tag_add('good', '1.8', '1.{}'.format(car + 8))
             
         page.config(state=DISABLED)
+    elif status.get() == 'edit':
+        pass
     else:
         page.mark_set("insert", debut)
         page.tag_add('now', INSERT, INSERT + "+1c")
@@ -70,12 +88,14 @@ def chargement():
             text = "Désolé, je ne peux pas ouvrir ce fichier :("
             protected.set(True)
             affichage(text)
+        error_collec = {}
 
 def profil_load(profil_index):
     """Charge le profil choisi dans la barre de menu"""
     pseudo.set(list_pseudo[profil_index])
     text = ('Bonjour {}, choisissez un texte et commencez votre entraînement'
             .format(pseudo.get()))
+    status.set('load')
     protected.set(True)
     starting.set(True)
     pop_up.set(False)
@@ -89,33 +109,24 @@ def nouveau():
     pop_up.set(False)
     affichage(text, '6.0')
 
-def pickle_access(debut):
-    """Sauvegarde la position dans le texte courant"""
-    with open('save.pkl', 'rb') as save_file:
-        repertoire = pickle.load(save_file)
-    with open('save.pkl', 'wb') as save_file:
-        repertoire[pseudo.get()]['text'][adresse.get()] = debut
-        pickle.dump(repertoire, save_file)
-
 def save(debut):
     """Sauvegarde ou renvoi l'emplacement du curseur dans le texte."""
+    repertoire = pickle_load()
     if status.get() == 'ouvrir':
-        debut = '1.0'
-        with open('save.pkl', 'rb') as save_file:
-            repertoire = pickle.load(save_file)
-            if adresse.get() in repertoire[pseudo.get()]['text']:
-                debut = repertoire[pseudo.get()]['text'][adresse.get()]
-            else:
-                repertoire[pseudo.get()]['text'][adresse.get()] = '1.0'
-                with open('save.pkl', 'wb') as save_file:
-                    pickle.dump(repertoire, save_file)
+        debut = '1.0'        
+        if adresse.get() in repertoire[pseudo.get()]['text']:
+            debut = repertoire[pseudo.get()]['text'][adresse.get()]
+        else:
+            repertoire[pseudo.get()]['text'][adresse.get()] = '1.0'
+            pickle_write(repertoire)                
         return debut
     else:
-        pickle_access(debut)
+        repertoire[pseudo.get()]['text'][adresse.get()] = debut
+        pickle_write(repertoire)
 
 def selection(event):
     """Sélectionne une partie du texte pour l'entraînement"""
-    if protected.get():
+    if protected.get() or status.get() == 'edit':
         pass
     else:
         try:
@@ -155,10 +166,10 @@ def chrono(start_stop):
             temps_total = [int(total // 60), int(total % 60)]
             mn, sec = temps_total[0], temps_total[1]
             precision = round(100 - (erreurs.get()/frappes.get()) * 100, 2)
-            text1 = ("""Félicitations!
+            text = ("""Félicitations!
 
 
-                      {} caractères par seconde
+                      {} caractères par seconde  
                       {} erreurs
                       précision = {}%
                       temps total = {}:{}mn
@@ -166,9 +177,9 @@ def chrono(start_stop):
                       """
             ).format(score, erreurs.get(), precision, mn, sec)
             if erreurs.get() == 0:
-                text2 = "Parfait, aucune erreur"
+                text += "Parfait, aucune erreur"
             else:
-                text2 = ("Erreurs fréquentes:\n")
+                text += ("Erreurs fréquentes:\n")
                 sorted_collec = sorted([key for key in error_collec])
                 for i in sorted_collec:
                     if len(error_collec[i]) < 2:
@@ -177,9 +188,8 @@ def chrono(start_stop):
                         car = i
                         if i == ' ':
                             car = '[esp]'
-                        text2 += ("à la place de [{}], vous avez tapé {}\n"
+                        text += ("à la place de [{}], vous avez tapé {}\n"
                         ).format(car, str(error_collec[i]))
-            text = text1 + text2
             status.set('result')
             protected.set(True)
             affichage(text)
@@ -219,6 +229,8 @@ def check(event):
         first_key.set(False)
     if input_mode.get():
         pass
+    elif status.get() == 'edit':
+        pass
     elif event.char == '':
         pass
     elif event.char == page.get(INSERT, INSERT + "+1c"):
@@ -248,12 +260,10 @@ def retour(event):
                                      'Voulez-vous:\n{}\ncomme pseudo'.format(
                                          nom), icon='question')
         if answer:
-            pseudo.set(nom[:-1])
-            with open('save.pkl', 'rb') as save_file:
-                repertoire = pickle.load(save_file)
-            with open('save.pkl', 'wb') as save_file:
-                repertoire[pseudo.get()] = {'text':{}}
-                pickle.dump(repertoire, save_file)
+            pseudo.set(nom[:-1])            
+            repertoire = pickle_load()
+            repertoire[pseudo.get()] = {'text':{}}
+            pickle_write(repertoire)
             text = ('Bonjour {},\n'.format(pseudo.get()) +
                     'choisissez un texte et commencez votre entraînement')
             protected.set(True)
@@ -262,7 +272,9 @@ def retour(event):
             affichage(text)
         else:
             nouveau()
-
+        return "break"
+    elif status.get() == 'edit':
+        pass
     elif page.get(INSERT, INSERT + "+1c") == '\n':
         frappes.set(frappes.get() + 1)
         ligne.set(ligne.get() + 1)
@@ -276,6 +288,7 @@ def retour(event):
             page.tag_remove('now', 1.0, END)
             page.tag_add('now', INSERT, INSERT + "+1c")
             page.see("insert +5 lines")
+        return "break"
     else:
         erreurs.set(erreurs.get() + 1)
         page.mark_set("ici", INSERT + "+1c")
@@ -286,11 +299,13 @@ def retour(event):
             error_collec[missed].append(event.char)
         else:
             error_collec[missed] = [event.char]
-    return "break"
+        return "break"
 
 def correction(event):
     """Action de la touche BackSpace."""
     if input_mode.get():
+        pass
+    elif status.get() == 'edit':
         pass
     else:
         page.mark_set("insert", "insert -1 chars")
@@ -298,29 +313,42 @@ def correction(event):
         page.tag_remove('now', 1.0, END)
         page.tag_add('now', INSERT, INSERT + "+1c")
         return "break"
+def edit_mode():
+    status.set('edit')
 
-# def sup_retour():
-#     """Mise en page des .txt téléchargés depuis le projet Gutenberg."""
-#     retour = False
-#     text = page.get(1.0, END)
-#     new_text = ''
-#     for char in text:
-#         if char == '\n':
-#             if retour == True:
-#                 retour = False
-#             else:
-#                 new_text += char
-#                 retour = True
-#         else:                
-#             new_text += char
-#     affichage(new_text,0.1)
+def sup_retour():
+    """Mise en page des .txt téléchargés depuis le projet Gutenberg."""
+    if status.get() == 'edit':
+        text = page.get(1.0, END)
+        with open('edit_save.txt', 'w') as save_text:
+            save_text.write(text)
+        text = ''
+        with open('edit_save.txt', 'r') as save_text:
+            retour = False
+            for line in save_text:
+                if line[0] == '\n' or line[-2] == '.':
+                    text += line
+                else:
+                    text += line[:-1] + ' '
+        with open('edit_save.txt', 'w') as save_text:
+            save_text.write(text)
+        affichage(text)
+    else:
+        messagebox.showinfo('Info',
+                                "Seulement en mode'Édition'" )
+def record():
+    text = page.get(1.0, END)
+    filename = filedialog.asksaveasfilename()    
+    with open('filename', 'w') as save_text:
+        save_text.write(text)
+    status.set('entraînement')
+    save(1.0)
+    affichage(text)
 
-
-preferenece = {}
-error_collec = {}
 
 root = Tk()
 root.title("DactyloPy")
+root.option_add('*tearOff', FALSE)
 
 starting = BooleanVar()
 pop_up = BooleanVar()
@@ -342,29 +370,32 @@ protected.set(True)
 input_mode.set(False)
 pseudo.set('Anonyme')
 
-root.option_add('*tearOff', FALSE)
 menubar = Menu(root)
-root['menu'] = menubar
+
 menu_file = Menu(menubar)
+menu_edit = Menu(menu_file)
+menu_profil = Menu(menubar)
+
 menubar.add_cascade(menu=menu_file, label='Texte')
 menu_file.add_command(command=chargement, label='Choisir un texte')
-#menu_file.add_command(command=sup_retour, label='Suppr double ret-char')
+menu_file.add_cascade(menu=menu_edit, label='Édition')
+menu_edit.add_command(command=edit_mode, label='Mode Édition')
+menu_edit.add_command(command=sup_retour, label='Supprimer les retours en trop')
+menu_edit.add_command(command=record, label='Enregistrer')
 menu_file.add_separator()
-menu_file.add_command(label="Quitter", command=root.quit)
-menu_profil = Menu(menubar)
+menu_file.add_command(label='Quitter', command=root.quit)
 menubar.add_cascade(menu=menu_profil, label='Profil')
 menu_profil.add_command(command=nouveau, label='Nouveau')
-try:
-    with open('save.pkl', 'rb') as save_file:
-        repertoire = pickle.load(save_file)
-except FileNotFoundError:
-    with open('save.pkl', 'wb') as save_file:
-        repertoire = {pseudo.get():{'text':{}}}
-        pickle.dump(repertoire, save_file)
+try:    
+    repertoire = pickle_load()
+except FileNotFoundError:    
+    repertoire = {pseudo.get():{'text':{}}}
+    pickle_write(repertoire)
 list_pseudo = sorted([key for key in repertoire])
 for nom in list_pseudo:
     menu_profil.add_command(command=lambda nom=nom: profil_load(
         list_pseudo.index(nom)), label=nom)
+root['menu'] = menubar
 
 page = Text(root, width=85, height=50, wrap=WORD, bg="#9FE2FD",
             font=('Arial', 12))
@@ -381,15 +412,18 @@ root.resizable(width=False, height=False)
 
 status_bar = ttk.Frame(root, borderwidth=1, relief=SUNKEN)
 status_bar.grid(column=0, row=1, sticky=(E,W))
-info = ttk.Label(status_bar, text="Nombre de frappes: ")
-info.grid(column=0, row=0, sticky=(W))
+info1 = ttk.Label(status_bar, text="Nombre de frappes: ")
+info1.grid(column=0, row=0, sticky=(W))
 nb_frappe = ttk.Label(status_bar, textvariable=frappes)
 nb_frappe.grid(column=1, row=0, sticky=(W))
 info2 = ttk.Label(status_bar, text="    Profil actuel: ")
 info2.grid(column=2, row=0, sticky=(W))
 pseudo_actuel = ttk.Label(status_bar, textvariable=pseudo)
 pseudo_actuel.grid(column=3, row=0, sticky=(W))
-
+info3 = ttk.Label(status_bar, text="    Statut: ")
+info3.grid(column=4, row=0, sticky=(W))
+statut_actuel = ttk.Label(status_bar, textvariable=status)
+statut_actuel.grid(column=5, row=0, sticky=(W))
 
 page.bind('<Key>', check)
 page.bind('<Button-1>', now)
