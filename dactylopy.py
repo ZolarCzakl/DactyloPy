@@ -172,7 +172,7 @@ def chrono(start_stop):
                       {} caractères par seconde  
                       {} erreurs
                       précision = {}%
-                      temps total = {}:{}mn
+                      temps total = {}:{:02d}mn
 
                       """
             ).format(score, erreurs.get(), precision, mn, sec)
@@ -326,7 +326,7 @@ def sup_retour():
         with open('edit_save.txt', 'r') as save_text:
             retour = False
             for line in save_text:
-                if line[0] == '\n' or line[-2] == '.':
+                if line[0] == '\n' or line[-2] == '.' or line.isupper():
                     text += line
                 else:
                     text += line[:-1] + ' '
@@ -338,8 +338,8 @@ def sup_retour():
                                 "Seulement en mode'Édition'" )
 def record():
     text = page.get(1.0, END)
-    filename = filedialog.asksaveasfilename()    
-    with open('filename', 'w') as save_text:
+    fichier = filedialog.asksaveasfilename()    
+    with open(fichier, 'w') as save_text:
         save_text.write(text)
     status.set('entraînement')
     save(1.0)
