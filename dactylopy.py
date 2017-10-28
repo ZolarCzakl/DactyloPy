@@ -43,6 +43,7 @@ def affichage(text, debut='1.0'):
         elif status.get() == 'load':
             car = len(pseudo.get())
             page.tag_add('good', '1.8', '1.{}'.format(car + 8))
+            status.set('entraînement')
             
         page.config(state=DISABLED)
     elif status.get() == 'edit':
@@ -118,7 +119,8 @@ def save(debut):
             debut = repertoire[pseudo.get()]['text'][adresse.get()]
         else:
             repertoire[pseudo.get()]['text'][adresse.get()] = '1.0'
-            pickle_write(repertoire)                
+            pickle_write(repertoire)
+        status.set('entraînement')
         return debut
     else:
         repertoire[pseudo.get()]['text'][adresse.get()] = debut
@@ -315,6 +317,7 @@ def correction(event):
         return "break"
 def edit_mode():
     status.set('edit')
+    protected.set(False)
 
 def sup_retour():
     """Mise en page des .txt téléchargés depuis le projet Gutenberg."""
@@ -325,8 +328,9 @@ def sup_retour():
         text = ''
         with open('edit_save.txt', 'r') as save_text:
             retour = False
+            ponct = ['.', '?', '!', ':']
             for line in save_text:
-                if line[0] == '\n' or line[-2] == '.' or line.isupper():
+                if line[0] == '\n' or line[-2] in ponct or line.isupper():
                     text += line
                 else:
                     text += line[:-1] + ' '
