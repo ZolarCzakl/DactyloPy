@@ -15,8 +15,6 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 
-preferenece = {}
-error_collec = {}
 
 def pickle_load():
     with open('save.pkl', 'rb') as save_file:
@@ -27,7 +25,7 @@ def pickle_write(repertoire):
     with open('save.pkl', 'wb') as save_file:
         pickle.dump(repertoire, save_file)
     
-def affichage(text, debut='1.0'):
+def affichage(text, debut='1.0',a_score=0, b_score=0, prec=0):
     """Affiche le texte sélectionné"""
     page.config(state=NORMAL)
     page.delete(1.0, END)
@@ -35,7 +33,19 @@ def affichage(text, debut='1.0'):
     if protected.get():
         if status.get() == 'result':
             page.tag_add('now', 1.0, '1.14')
-            page.tag_add('good', '4.18', '4.54')
+            if a_score >= b_score:
+                page.tag_add('good', '4.18', '4.53')
+            elif b_score - a_score <= 2:
+                page.tag_add('medium', '4.18', '4.53')
+            else:
+                page.tag_add('wrong', '4.18', '4.54')
+            page.tag_add('good', '4.55', '4.65')
+            if prec >= 90:
+                page.tag_add('good', '6.18', '6.51')
+            elif prec >= 80:
+                page.tag_add('medium', '6.18', '6.51')
+            else:
+                page.tag_add('wrong', '6.18', '6.51')
         elif status.get() == 'accueil':
             page.tag_add('now', '8.13', '8.22')
             page.tag_add('now', '18.0', '18.9')
@@ -112,7 +122,7 @@ def nouveau():
 
 def save(debut):
     """Sauvegarde ou renvoi l'emplacement du curseur dans le texte."""
-    repertoire = pickle_load()
+    repertoire = pickle_load()    
     if status.get() == 'ouvrir':
         debut = '1.0'        
         if adresse.get() in repertoire[pseudo.get()]['text']:
@@ -125,7 +135,7 @@ def save(debut):
     else:
         repertoire[pseudo.get()]['text'][adresse.get()] = debut
         pickle_write(repertoire)
-
+        
 def selection(event):
     """Sélectionne une partie du texte pour l'entraînement"""
     if protected.get() or status.get() == 'edit':
@@ -153,17 +163,19 @@ def chrono(start_stop):
         timing.set(time.time())
     else:
         total = time.time() - timing.get()
+        repertoire = pickle_load()
+        best_score = repertoire[pseudo.get()]['score']        
         if start_stop == 'stop':
             if status.get() == 'selection_start':
                 sel_start = debut_sel.get().split('.')
                 ligne.set(int(sel_start[0]) + ligne.get())
                 caractere.set(int(sel_start[1]) + caractere.get())
                 debut = str(ligne.get()) + '.' + str(caractere.get())
-                status.set('selection_stop')
+                status.set('selection_stop')                
             else:
-                debut = page.index(INSERT)
+                debut = page.index(INSERT)                
             status.set('fermer')
-            save(debut)
+            save(debut)            
             score = round(frappes.get() / total, 2)
             temps_total = [int(total // 60), int(total % 60)]
             mn, sec = temps_total[0], temps_total[1]
@@ -171,13 +183,16 @@ def chrono(start_stop):
             text = ("""Félicitations!
 
 
-                      {} caractères par seconde  
+                      {} caractères par seconde        ({})   
                       {} erreurs
-                      précision = {}%
+                      précision = {}%    
                       temps total = {}:{:02d}mn
 
                       """
-            ).format(score, erreurs.get(), precision, mn, sec)
+            ).format(score, best_score, erreurs.get(), precision, mn, sec)
+            if score > best_score:
+                repertoire[pseudo.get()]['score'] = score
+                pickle_write(repertoire)
             if erreurs.get() == 0:
                 text += "Parfait, aucune erreur"
             else:
@@ -191,10 +206,10 @@ def chrono(start_stop):
                         if i == ' ':
                             car = '[esp]'
                         text += ("à la place de [{}], vous avez tapé {}\n"
-                        ).format(car, str(error_collec[i]))
+                        ).format(car, str(error_collec[i]))                  
             status.set('result')
             protected.set(True)
-            affichage(text)
+            affichage(text,a_score=score, b_score=best_score, prec=precision)
 
 def stop_chrono(event):
     """Stopper l'entraînement avec la touche échappe"""
@@ -258,20 +273,41 @@ def retour(event):
     """Action de la touche Return"""
     if input_mode.get():
         nom = page.get('4.0', END)
+        nom = nom[:-1]
         answer = messagebox.askyesno('Pseudo?',
                                      'Voulez-vous:\n{}\ncomme pseudo'.format(
                                          nom), icon='question')
         if answer:
-            pseudo.set(nom[:-1])            
+            pseudo.set(nom)            
             repertoire = pickle_load()
-            repertoire[pseudo.get()] = {'text':{}}
-            pickle_write(repertoire)
-            text = ('Bonjour {},\n'.format(pseudo.get()) +
-                    'choisissez un texte et commencez votre entraînement')
-            protected.set(True)
-            starting.set(True)
-            pop_up.set(True)
-            affichage(text)
+            text = '{} est déjà enregistré\n'.format(nom)
+            text += 'Voulez-vous le réinitialiser?'
+            if nom in repertoire:
+                answer = messagebox.askyesno('Hum...', text, icon='question')
+                if answer:
+                    repertoire[nom] = {'text':{}, 'score':0}
+                    pickle_write(repertoire)
+                    text = ('Bonjour {},\n'.format(pseudo.get()) +
+                            'choisissez un texte et commencez' 
+                            'votre entraînement')
+                    protected.set(True)
+                    starting.set(True)
+                    pop_up.set(True)
+                    status.set('entraînement')
+                    affichage(text)
+                else:
+                    nouveau()
+            else:
+                 repertoire[nom] = {'text':{}, 'score':0}
+                 pickle_write(repertoire)
+                 text = ('Bonjour {},\n'.format(pseudo.get()) +
+                         'choisissez un texte et commencez' 
+                         'votre entraînement')
+                 protected.set(True)
+                 starting.set(True)
+                 pop_up.set(True)
+                 status.set('entraînement')
+                 affichage(text)            
         else:
             nouveau()
         return "break"
@@ -354,6 +390,9 @@ root = Tk()
 root.title("DactyloPy")
 root.option_add('*tearOff', FALSE)
 
+preferenece = {}
+error_collec = {}
+
 starting = BooleanVar()
 pop_up = BooleanVar()
 protected = BooleanVar()
@@ -393,7 +432,7 @@ menu_profil.add_command(command=nouveau, label='Nouveau')
 try:    
     repertoire = pickle_load()
 except FileNotFoundError:    
-    repertoire = {pseudo.get():{'text':{}}}
+    repertoire = {pseudo.get():{'text':{}, 'score':0}}
     pickle_write(repertoire)
 list_pseudo = sorted([key for key in repertoire])
 for nom in list_pseudo:
@@ -411,6 +450,7 @@ page.mark_set("ici", INSERT)
 page.tag_config('now', background='yellow')
 page.tag_config('good', background='#34FF34')
 page.tag_config('wrong', background='red')
+page.tag_config('medium', background='#FF9903')
 
 root.resizable(width=False, height=False)
 
