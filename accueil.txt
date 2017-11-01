@@ -2,7 +2,7 @@ mirë dita, guàtertag, Прывiтанне, idh-iyessbhène, добър ден,
 
 bref, bonjour!
 
-Bienvenu dans DactyloPy, logiciel d'entrainement à la dactylographie.
+Bienvenue dans DactyloPy, logiciel d'entrainement à la dactylographie.
 
 Il vous permettra d'améliorer votre technique et votre culture générale en parcourant les grands classiques disponibles par exemple sur Project Gutenberg (https://www.gutenberg.org/) ou tout autre texte au format .txt (ou du code en n'importe quel langage mais vous n'aurez pas la coloration syntaxique).
 
@@ -12,3 +12,4 @@ DactyloPy reprend le concept de AmpheType (https://github.com/webiest/amphetype)
 
 - Cliquer sur l'onglet 'Profil' pour créer ou charger un profil personnel qui stockera vos préférences, performances et positions dans les textes que vous ouvrirez. Ou vous pouvez directement
 - Cliquez sur l'onglet 'Texte' et choisissez un fichier. Selectionnez une partie du texte ou commencez à l'endroit de votre choix (d'un clic), le chronomètre se déclenchera dès la première frappe et stoppera à la fin du texte ou si vous appuyez sur la touche 'échappe'. La position finale du curseur est mémorisée pour la prochaine utilisation du texte.
+
