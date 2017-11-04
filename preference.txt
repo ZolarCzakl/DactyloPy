@@ -1,0 +1,20 @@
+
+Préférences.
+
+Ici, vous pouvez choisir:
+-La police de caractère
+-La taille des caractères
+-Le nombre de lignes affichées
+-Le nombre de caractères par ligne
+-La couleur de fond
+-La couleur des caractères
+-La couleur de fond de l'emplacement actuel du curseur |  
+-La couleur de fond des frappes correctes 
+-La couleur de fond des frappes erronées 
+-La couleur de fond des résultats 'moyens' 
+
+Utilisez le bouton "Voyons voir" pour visualiser le résultat de vos modifications.
+Utilisez le bouton "Enregistrer" pour sauvegarder les réglages dans le profil actuel.
+
+
+
