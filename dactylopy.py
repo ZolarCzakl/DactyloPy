@@ -6,6 +6,9 @@ Optimisé pour les romans et le respect des caractères spéciaux.
 
 License Libre
 rod.cat@free.fr
+
+Logo: Simon Child https://thenounproject.com/Simon%20Child/
+Creative Commons
 """
 
 import time
@@ -626,6 +629,11 @@ def pref():
 
 root = Tk()
 root.title("DactyloPy")
+try:
+    root.iconbitmap('TW.ico')
+except:
+    root.iconbitmap('@TW.xbm')
+else: pass
 root.option_add('*tearOff', FALSE)
 
 fonts = list(font.families())
