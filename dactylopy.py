@@ -11,8 +11,7 @@ rod.cat@free.fr
 import time
 import datetime
 import pickle
-import os
-import sys
+import io
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
@@ -65,7 +64,7 @@ def affichage(text, debut='1.0',a_score=0, b_score=0, prec=0):
             car = len(pseudo.get())
             page.tag_add('good', '1.8', '1.{}'.format(car + 8))
             status.set('entraînement')
-        elif status.get() == 'préférence':
+        elif status.get() == 'préference':
             page.tag_add('now', '2.0', '2.12')
             page.tag_add('now', '11.55', '11.57')
             page.tag_add('good', '12.23', '12.43')
@@ -93,7 +92,7 @@ def affichage(text, debut='1.0',a_score=0, b_score=0, prec=0):
             messagebox.showinfo('Info',
                                 'Sélectionnez une partie du texte\n'
                                 'ou commencez à taper\n'
-                                "(Esc pour terminer entraînement).")
+                                "(Esc pour terminer l’entraînement).")
             pop_up.set(False)
 
 def deja_ouvert(emplacement):
@@ -103,7 +102,7 @@ def deja_ouvert(emplacement):
         protected.set(False)
         input_mode.set(False)
         debut = ''        
-        with open(emplacement) as text_brut:
+        with io.open(emplacement,'r', encoding='utf8') as text_brut:
             text = text_brut.read()        
         status.set('ouvrir')        
         debut = save(debut)
@@ -206,8 +205,7 @@ def save(debut):
         status.set('entraînement')        
         return debut
     else:
-        repertoire[pseudo.get()]['text'][adresse.get()] = (debut, date)
-        print('save', debut)
+        repertoire[pseudo.get()]['text'][adresse.get()] = (debut, date)        
         pickle_write(repertoire)
         opened_update()
         
@@ -223,14 +221,12 @@ def selection(event):
             if answer:
                 debut = page.index(SEL_FIRST)
                 debut_sel.set(debut)
-                text = page.get(SEL_FIRST, SEL_LAST)
-                print(text)
+                text = page.get(SEL_FIRST, SEL_LAST)                
                 while True:
                     if text[-2] == '\n':
                         text = text[:-1]
                     else:
-                        break
-                print(text)
+                        break                
                 affichage(text)
                 status.set('selection_start')
                 save(debut)            
@@ -251,12 +247,10 @@ def chrono(start_stop):
                 ligne.set(int(sel_start[0]) + ligne.get())
                 caractere.set(int(sel_start[1]) + caractere.get())
                 debut = str(ligne.get()) + '.' + str(caractere.get())
-                print('chrono selec', debut)
             else:    
                 debut = page.index(INSERT)                
             status.set('fermer')
-            save(debut)
-            print('chrono stop', debut)
+            save(debut)            
             score = round(frappes.get() / total, 2)
             temps_total = [int(total // 60), int(total % 60)]
             mn, sec = temps_total[0], temps_total[1]
@@ -438,10 +432,10 @@ def sup_retour():
     """Mise en page des .txt téléchargés depuis le projet Gutenberg."""
     if status.get() == 'edit':
         text = page.get(1.0, END)
-        with open('edit_save.txt', 'w') as save_text:
+        with io.open('edit_save.txt', 'w', encoding='utf8') as save_text:
             save_text.write(text)
         text = ''
-        with open('edit_save.txt', 'r') as save_text:
+        with io.open('edit_save.txt', 'r', encoding='utf8') as save_text:
             retour = False
             ponct = ['.', '?', '!', ':']
             for line in save_text:
@@ -449,18 +443,18 @@ def sup_retour():
                     text += line
                 else:
                     text += line[:-1] + ' '
-        with open('edit_save.txt', 'w') as save_text:
+        with io.open('edit_save.txt', 'w', encoding='utf8') as save_text:
             save_text.write(text)
         affichage(text)
     else:
         messagebox.showinfo('Info',
-                                "Seulement en mode 'Édition'" )
+                                "Seulement en mode'Édition'" )
         
 def record():
     """Enregistre le texte affiché après édition"""
     text = page.get(1.0, END)
     fichier = filedialog.asksaveasfilename()    
-    with open(fichier, 'w') as save_text:
+    with io.open(fichier, 'w', encoding='utf8') as save_text:
         save_text.write(text)
     status.set('entraînement')
     save(1.0)
@@ -550,10 +544,8 @@ def dark_preset():
     
 def page_reload():
     """Redémarrage de l'application pour fermer le frame préférences"""
-    with open('.redemarrage', 'w') as reboot:
-        reboot.write(pseudo.get())
-    python = sys.executable
-    os.execl(python, python, * sys.argv)
+    boutons.grid_forget()
+    preview()
 
 def save_pref():
     """Sauvegarde les préférences dans le profil actif"""
@@ -573,11 +565,10 @@ def save_pref():
 
 def pref():
     """Affiche le frame des préférences"""
-    status.set('préférence')
+    status.set('préference')
     text = open('preference.txt')
     text = text.read()
-    page['width'] = 70
-    boutons = ttk.Frame(root)
+    page['width'] = 70   
     boutons.grid(column=2, row=0, sticky=(N,E))
     ttk.Label(boutons, text='\nPolices de caractères\n',
               background='#C3C4C9').grid(column=0, row=0, sticky=(E,W)) 
@@ -615,7 +606,7 @@ def pref():
         column=0, row=12, sticky=(E,W))
     ttk.Button(boutons, text='Frappes correctes', command=good_coul
         ).grid(column=0, row=13, sticky=(E,W))
-    ttk.Button(boutons, text='Frappes erronées', command=wrong_coul).grid(
+    ttk.Button(boutons, text='Frappes érronées', command=wrong_coul).grid(
         column=0, row=14, sticky=(E,W))
     ttk.Button(boutons, text='Résultat moyen', command=med_coul).grid(
         column=0, row=15, sticky=(E,W))
@@ -623,11 +614,11 @@ def pref():
               background='#C3C4C9').grid(column=0, row=16, sticky=(E,W))
     ttk.Button(boutons, text='Voyons voir', command=preview).grid(
         column=0, row=17, sticky=(E,W))
-    ttk.Label(boutons, text='\nSauvegarde préférences\n',
+    ttk.Label(boutons, text='\nSauvegarde préferences\n',
               background='#C3C4C9').grid(column=0, row=18, sticky=(E,W))
     ttk.Button(boutons, text='Enregistrer', command=save_pref).grid(
         column=0, row=19, sticky=(E,W))
-    ttk.Button(boutons, text='Quitter préférences', command=page_reload).grid(
+    ttk.Button(boutons, text='Quitter préference', command=page_reload).grid(
         column=0, row=20, sticky=(E,W))
     protected.set(True)
     affichage(text)
@@ -669,17 +660,8 @@ starting.set(True)
 pop_up.set(True)
 protected.set(True)
 input_mode.set(False)
-try:
-    with open('.redemarrage') as reboot:
-        pseudo.set(reboot.read())
-    os.remove('.redemarrage')
-    repertoire = pickle_load()    
-    list_pseudo = sorted([key for key in repertoire])
-    pseudo_index = list_pseudo.index(pseudo.get())
-    profil_load(profil_index)
-except:
-    pseudo.set('Anonyme')
-    classic_preset()
+pseudo.set('Anonyme')
+classic_preset()
 
 menubar = Menu(root)
 menu_file = Menu(menubar)
@@ -699,7 +681,7 @@ menu_file.add_command(label='Quitter', command=root.quit)
 menubar.add_cascade(menu=menu_profil, label='Profil')
 profil_update()
 menubar.add_cascade(menu=menu_pref, label='Apparence')
-menu_pref.add_command(command=pref, label='Préférences')
+menu_pref.add_command(command=pref, label='Préferences')
 menu_pref.add_command(command=classic_preset, label='Thème classique')
 menu_pref.add_command(command=dark_preset, label='Thème sombre')
 root['menu'] = menubar
@@ -744,9 +726,11 @@ info4.grid(column=6, row=0)
 police_actuelle = ttk.Label(status_bar, textvariable=police)
 police_actuelle.grid(column=7, row=0)
 
+boutons = ttk.Frame(root)
+
 try:
-    text = open('accueil.txt')
-    text = text.read()
+    with io.open('accueil.txt', 'r', encoding='utf8') as text:
+        text = text.read()
     status.set('accueil')
 except:
     text = """Bienvenue dans DactyloPy
