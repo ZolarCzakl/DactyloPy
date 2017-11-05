@@ -569,8 +569,8 @@ def save_pref():
 def pref():
     """Affiche le frame des préférences"""
     status.set('préference')
-    text = open('preference.txt')
-    text = text.read()
+    with io.open('preference.txt', 'r', encoding='utf8') as text:
+        text = text.read()
     page['width'] = 70   
     boutons.grid(column=2, row=0, sticky=(N,E))
     ttk.Label(boutons, text='\nPolices de caractères\n',
