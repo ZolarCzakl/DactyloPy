@@ -716,7 +716,7 @@ page.bind('<ButtonRelease>', selection)
 page.bind('<Escape>', stop_chrono)
 
 status_bar = ttk.Frame(root, borderwidth=1, relief=SUNKEN)
-status_bar.grid(column=0, row=1, sticky=(E,W), columnspan=2)
+status_bar.grid(column=0, row=1, sticky=(E,W), columnspan=3)
 info1 = ttk.Label(status_bar, text="Nombre de frappes: ")
 info1.grid(column=0, row=0, sticky=(W))
 nb_frappe = ttk.Label(status_bar, textvariable=frappes)
