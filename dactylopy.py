@@ -28,21 +28,23 @@ def pickle_load():
     try:
         with open('save.pkl', 'rb') as save_file:
             repertoire = pickle.load(save_file)
-    except FileNotFoundError:    
-        repertoire = {pseudo.get():{'text':{}, 'score':0}}
+    except FileNotFoundError:
+        repertoire = {pseudo.get(): {'text': {}, 'score': 0}}
         pickle_write(repertoire)
     return repertoire
-    
+
+
 def pickle_write(repertoire):
     """Mise à jour de la sauvegarde"""
     with open('save.pkl', 'wb') as save_file:
         pickle.dump(repertoire, save_file)
-    
-def affichage(text, debut='1.0',a_score=0, b_score=0, prec=0):
-    """Affiche et tag le texte sélectionné"""    
+
+
+def affichage(text, debut='1.0', a_score=0, b_score=0, prec=0):
+    """Affiche et tag le texte sélectionné"""
     page.config(state=NORMAL)
     page.delete(1.0, END)
-    page.insert(1.0, text)    
+    page.insert(1.0, text)
     if protected.get():
         if status.get() == 'result':
             page.tag_add('now', 1.0, '1.14')
@@ -76,11 +78,11 @@ def affichage(text, debut='1.0',a_score=0, b_score=0, prec=0):
         else: pass
         page.config(state=DISABLED)
     elif status.get() == 'edit': pass
-    else:        
-        page.mark_set("insert", debut)        
+    else:
+        page.mark_set("insert", debut)
         page.tag_add('now', INSERT, INSERT + "+1c")
         page.see("insert")
-        page.focus_force()        
+        page.focus_force()
         first_key.set(True)
         frappes.set(0)
         erreurs.set(0)
@@ -98,26 +100,27 @@ def affichage(text, debut='1.0',a_score=0, b_score=0, prec=0):
                                 "(Esc pour terminer l’entraînement).")
             pop_up.set(False)
 
+
 def deja_ouvert(emplacement):
-    """Ouvre le fichier sélectionné"""    
+    """Ouvre le fichier sélectionné"""
     try:
         adresse.set(emplacement)
         protected.set(False)
         input_mode.set(False)
-        debut = ''        
-        with io.open(emplacement,'r', encoding='utf8') as text_brut:
-            text = text_brut.read()        
-        status.set('ouvrir')        
+        debut = ''
+        with io.open(emplacement, 'r', encoding='utf8') as text_brut:
+            text = text_brut.read()
+        status.set('ouvrir')
         debut = save(debut)
         try:
             affichage(text, debut)
-        except:
+        except Exception:
             affichage(text, debut[0])
-    except:
+    except Exception:
         text = "Désolé, je ne peux pas ouvrir ce fichier :("
-        protected.set(True)        
+        protected.set(True)
         affichage(text)
-        
+
 
 def chargement():
     """sélection d'un texte via la barre de menu"""
@@ -127,16 +130,17 @@ def chargement():
         emplacement = adresse.get()
         deja_ouvert(emplacement)
 
+
 def opened_update():
     """Mise à jour du menu 'Fichiers récents'"""
     repertoire = pickle_load()
     tup_list = []
     try:
-        menu_opened.delete(0,END)
-    except:pass
+        menu_opened.delete(0, END)
+    except Exception: pass
     for texte in repertoire[pseudo.get()]['text']:
         last = repertoire[pseudo.get()]['text'][texte][1], texte
-        tup_list.append(last)        
+        tup_list.append(last)
     tup_list.sort()
     if len(tup_list) > 3:
         tup_list = tup_list[-3:]
@@ -146,17 +150,19 @@ def opened_update():
                                 deja_ouvert(emplacement[1]),
                                 label=emplacement[1])
 
+
 def profil_update():
     """Mise à jour du menu 'Profil'"""
     repertoire = pickle_load()
     list_pseudo = sorted([key for key in repertoire])
     try:
-        menu_profil.delete(0,END)
-    except: pass
+        menu_profil.delete(0, END)
+    except Exception: pass
     menu_profil.add_command(command=nouveau, label='Nouveau')
     for nom in list_pseudo:
         menu_profil.add_command(command=lambda nom=nom: profil_load(
             list_pseudo.index(nom)), label=nom)
+
 
 def profil_load(profil_index):
     """Charge le profil choisi dans la barre de menu"""
@@ -176,8 +182,8 @@ def profil_load(profil_index):
         police.set(set_dic['police'])
         pol_size.set(set_dic['psize'])
         preview()
-    except: pass
-    opened_update()        
+    except Exception: pass
+    opened_update()
     text = ('Bonjour {}, choisissez un texte et commencez votre entraînement'
             .format(pseudo.get()))
     status.set('load')
@@ -185,6 +191,7 @@ def profil_load(profil_index):
     starting.set(True)
     pop_up.set(False)
     affichage(text)
+
 
 def nouveau():
     """Création d'un nouveau profil"""
@@ -194,46 +201,48 @@ def nouveau():
     pop_up.set(False)
     affichage(text, '6.0')
 
+
 def save(debut):
     """Sauvegarde ou renvoi l'emplacement du curseur dans le texte."""
-    repertoire = pickle_load()    
+    repertoire = pickle_load()
     date = str(datetime.datetime.now())[:16]
-    if status.get() == 'ouvrir':        
+    if status.get() == 'ouvrir':
         if adresse.get() in repertoire[pseudo.get()]['text']:
             debut = repertoire[pseudo.get()]['text'][adresse.get()][0]
         else:
             repertoire[pseudo.get()]['text'][adresse.get()] = ('1.0', date)
             pickle_write(repertoire)
             debut = '1.0'
-        status.set('entraînement')        
+        status.set('entraînement')
         return debut
     else:
-        repertoire[pseudo.get()]['text'][adresse.get()] = (debut, date)        
+        repertoire[pseudo.get()]['text'][adresse.get()] = (debut, date)
         pickle_write(repertoire)
         opened_update()
-        
+
+
 def selection(event):
-    """Sélectionne une partie du texte pour l'entraînement"""    
+    """Sélectionne une partie du texte pour l'entraînement"""
     if protected.get() or status.get() == 'edit': pass
     else:
         try:
-            page.get(SEL_FIRST, SEL_LAST)            
-            answer = messagebox.askyesno('selection', 
-                 'Utiliser cette sélection pour votre entraînement?',
-                 icon='question')
+            page.get(SEL_FIRST, SEL_LAST)
+            text = 'Utiliser cette sélection pour votre entraînement?'
+            answer = messagebox.askyesno('selection', text, icon='question')
             if answer:
                 debut = page.index(SEL_FIRST)
                 debut_sel.set(debut)
-                text = page.get(SEL_FIRST, SEL_LAST)                
+                text = page.get(SEL_FIRST, SEL_LAST)
                 while True:
                     if text[-2] == '\n':
                         text = text[:-1]
                     else:
-                        break                
+                        break
                 affichage(text)
                 status.set('selection_start')
-                save(debut)            
-        except: pass
+                save(debut)
+        except Exception: pass
+
 
 def chrono(start_stop):
     """Déclenche et stoppe le chronomètre, calcul le score final"""
@@ -242,18 +251,18 @@ def chrono(start_stop):
         timing.set(time.time())
     else:
         total = time.time() - timing.get()
-        repertoire = pickle_load()        
-        best_score = repertoire[pseudo.get()]['score']        
+        repertoire = pickle_load()
+        best_score = repertoire[pseudo.get()]['score']
         if start_stop == 'stop':
             if status.get() == 'selection_start':
                 sel_start = debut_sel.get().split('.')
                 ligne.set(int(sel_start[0]) + ligne.get())
                 caractere.set(int(sel_start[1]) + caractere.get())
                 debut = str(ligne.get()) + '.' + str(caractere.get())
-            else:    
-                debut = page.index(INSERT)                
+            else:
+                debut = page.index(INSERT)
             status.set('fermer')
-            save(debut)            
+            save(debut)
             score = round(frappes.get() / total, 2)
             temps_total = [int(total // 60), int(total % 60)]
             mn, sec = temps_total[0], temps_total[1]
@@ -261,13 +270,13 @@ def chrono(start_stop):
             text = ("""Félicitations!
 
 
-                      {} caractères par seconde        ({})   
+                      {} caractères par seconde        ({})
                       {} erreurs
-                      précision = {}%    
+                      précision = {}%
                       temps total = {}:{:02d}mn
-
                       """
-            ).format(score, best_score, erreurs.get(), precision, mn, sec)
+                    ).format(score, best_score, erreurs.get(),
+                             precision, mn, sec)
             if score > best_score:
                 repertoire[pseudo.get()]['score'] = score
                 pickle_write(repertoire)
@@ -283,11 +292,12 @@ def chrono(start_stop):
                         if i == ' ':
                             car = '[esp]'
                         text += ("à la place de [{}], vous avez tapé {}\n"
-                        ).format(car, str(error_collec[i]))
-                    del error_collec[i]    
+                                 ).format(car, str(error_collec[i]))
+                    del error_collec[i]
             status.set('result')
             protected.set(True)
-            affichage(text,a_score=score, b_score=best_score, prec=precision)
+            affichage(text, a_score=score, b_score=best_score, prec=precision)
+
 
 def stop_chrono(event):
     """Stopper l'entraînement avec la touche échappe"""
@@ -297,24 +307,28 @@ def stop_chrono(event):
     if answer:
         chrono('stop')
 
+
 def now(event):
     """Tag de la position courante du curseur"""
     if protected.get(): pass
     else:
         page.tag_remove('now', 1.0, END)
-        page.tag_add('now', CURRENT, CURRENT + "+1c")        
+        page.tag_add('now', CURRENT, CURRENT + "+1c")
+
 
 def good(ici):
     """Tag des lettres correctes déjà tapées"""
     page.tag_remove('now', 1.0, END)
     page.tag_add('now', ici, ici + "+1c")
-    page.tag_add('good', INSERT, ici)    
+    page.tag_add('good', INSERT, ici)
+
 
 def wrong(ici):
     """Tag des erreurs"""
     page.tag_remove('now', 1.0, END)
     page.tag_add('now', ici, ici + "+1c")
     page.tag_add('wrong', INSERT, ici)
+
 
 def check(event):
     """Vérifie et comptabilise les frappes."""
@@ -336,12 +350,13 @@ def check(event):
         missed = page.get(INSERT, INSERT + "+1c")
         page.mark_set("ici", INSERT + "+1c")
         wrong('ici')
-        page.mark_set("insert", INSERT + "+1c")        
+        page.mark_set("insert", INSERT + "+1c")
         if missed in error_collec:
             error_collec[missed].append(event.char)
         else:
             error_collec[missed] = [event.char]
         return "break"
+
 
 def retour(event):
     """Action de la touche Return"""
@@ -352,17 +367,17 @@ def retour(event):
                                      'Voulez-vous:\n{}\ncomme pseudo'.format(
                                          nom), icon='question')
         if answer:
-            pseudo.set(nom)            
-            repertoire = pickle_load()            
+            pseudo.set(nom)
+            repertoire = pickle_load()
             text = '{} est déjà enregistré\n'.format(nom)
             text += 'Voulez-vous le réinitialiser?'
             if nom in repertoire:
                 answer = messagebox.askyesno('Hum...', text, icon='question')
                 if answer:
-                    repertoire[nom] = {'text':{}, 'score':0}
+                    repertoire[nom] = {'text': {}, 'score': 0}
                     pickle_write(repertoire)
                     text = ('Bonjour {},\n'.format(pseudo.get()) +
-                            'choisissez un texte et commencez' 
+                            'choisissez un texte et commencez'
                             'votre entraînement')
                     protected.set(True)
                     starting.set(True)
@@ -374,17 +389,17 @@ def retour(event):
                 else:
                     nouveau()
             else:
-                 repertoire[nom] = {'text':{}, 'score':0}
-                 pickle_write(repertoire)
-                 text = ('Bonjour {},\n'.format(pseudo.get()) +
-                         'choisissez un texte et commencez' 
-                         'votre entraînement')
-                 protected.set(True)
-                 starting.set(True)
-                 pop_up.set(True)
-                 status.set('entraînement')
-                 profil_update()
-                 affichage(text)
+                repertoire[nom] = {'text': {}, 'score': 0}
+                pickle_write(repertoire)
+                text = ('Bonjour {},\n'.format(pseudo.get()) +
+                        'choisissez un texte et commencez'
+                        'votre entraînement')
+                protected.set(True)
+                starting.set(True)
+                pop_up.set(True)
+                status.set('entraînement')
+                profil_update()
+                affichage(text)
         else:
             nouveau()
         return "break"
@@ -397,8 +412,8 @@ def retour(event):
         line = int(pos.split('.')[0]) + 1
         if pos == page.index("end - 1 chars"):
             chrono('stop')
-        else:            
-            page.mark_set("insert", '%d.%d' % (line,0))
+        else:
+            page.mark_set("insert", '%d.%d' % (line, 0))
             page.tag_remove('now', 1.0, END)
             page.tag_add('now', INSERT, INSERT + "+1c")
             page.see("insert +5 lines")
@@ -415,6 +430,7 @@ def retour(event):
             error_collec[missed] = [event.char]
         return "break"
 
+
 def correction(event):
     """Action de la touche BackSpace."""
     if input_mode.get(): pass
@@ -425,11 +441,13 @@ def correction(event):
         page.tag_remove('now', 1.0, END)
         page.tag_add('now', INSERT, INSERT + "+1c")
         return "break"
-    
+
+
 def edit_mode():
     """Permet l'édition du texte affiché"""
     status.set('edit')
     protected.set(False)
+
 
 def sup_retour():
     """Mise en page des .txt téléchargés depuis le projet Gutenberg."""
@@ -439,7 +457,6 @@ def sup_retour():
             save_text.write(text)
         text = ''
         with io.open('edit_save.txt', 'r', encoding='utf8') as save_text:
-            retour = False
             ponct = ['.', '?', '!', ':']
             for line in save_text:
                 if line[0] == '\n' or line[-2] in ponct or line.isupper():
@@ -451,26 +468,30 @@ def sup_retour():
         affichage(text)
     else:
         messagebox.showinfo('Info',
-                                "Seulement en mode'Édition'" )
-        
+                            "Seulement en mode'Édition'")
+
+
 def record():
     """Enregistre le texte affiché après édition"""
     text = page.get(1.0, END)
-    fichier = filedialog.asksaveasfilename()    
+    fichier = filedialog.asksaveasfilename()
     with io.open(fichier, 'w', encoding='utf8') as save_text:
         save_text.write(text)
     status.set('entraînement')
     save(1.0)
     affichage(text)
 
+
 def font_choice():
     """Choix de la police de caractères"""
     police.set(police_list.get(ACTIVE))
 
+
 def coul_choice():
     """Ouvre l'interface de choix de couleurs et renvoi la sélection"""
-    couleur = colorchooser.askcolor()    
+    couleur = colorchooser.askcolor()
     return couleur[1]
+
 
 def bg_coul():
     """Couleur du fond"""
@@ -478,11 +499,13 @@ def bg_coul():
     if coul:
         col_bg.set(coul)
 
+
 def pol_coul():
     """Couleur des caractères"""
     coul = coul_choice()
     if coul:
         col_pol.set(coul)
+
 
 def now_coul():
     """couleur du tag 'now'"""
@@ -490,11 +513,13 @@ def now_coul():
     if coul:
         col_now.set(coul)
 
+
 def good_coul():
     """couleur du tag 'good'"""
     coul = coul_choice()
     if coul:
         col_good.set(coul)
+
 
 def wrong_coul():
     """couleur du tag 'wrong'"""
@@ -502,11 +527,13 @@ def wrong_coul():
     if coul:
         col_wrong.set(coul)
 
+
 def med_coul():
     """couleur du tag 'medium'"""
     coul = coul_choice()
     if coul:
         col_med.set(coul)
+
 
 def preview():
     """Affiche les modifications des préférences"""
@@ -518,6 +545,7 @@ def preview():
     page.tag_config('wrong', background=col_wrong.get())
     page.tag_config('medium', background=col_med.get())
     root.resizable(width=False, height=False)
+
 
 def classic_preset():
     """preset de préférences 1"""
@@ -532,6 +560,7 @@ def classic_preset():
     nb_line.set(85)
     nb_col.set(50)
 
+
 def dark_preset():
     """preset de préférences 2"""
     col_bg.set('black')
@@ -544,15 +573,17 @@ def dark_preset():
     pol_size.set(12)
     nb_line.set(85)
     nb_col.set(50)
-    
+
+
 def page_reload():
     """Redémarrage de l'application pour fermer le frame préférences"""
     boutons.grid_forget()
     preview()
 
+
 def save_pref():
     """Sauvegarde les préférences dans le profil actif"""
-    repertoire = pickle_load()    
+    repertoire = pickle_load()
     repertoire[pseudo.get()]['pref'] = {'ligne': nb_line.get(),
                                         'col': nb_col.get(),
                                         'bg': col_bg.get(),
@@ -566,63 +597,64 @@ def save_pref():
     print(repertoire)
     pickle_write(repertoire)
 
+
 def pref():
     """Affiche le frame des préférences"""
     status.set('préference')
     with io.open('preference.txt', 'r', encoding='utf8') as text:
         text = text.read()
-    page['width'] = 70   
-    boutons.grid(column=2, row=0, sticky=(N,E))
+    page['width'] = 70
+    boutons.grid(column=2, row=0, sticky=(N, E))
     ttk.Label(boutons, text='\nPolices de caractères\n',
-              background='#C3C4C9').grid(column=0, row=0, sticky=(E,W)) 
+              background='#C3C4C9').grid(column=0, row=0, sticky=(E, W))
     police_list = Listbox(boutons, height=10)
     police_list.grid(column=0, row=1)
     ind = 0
-    for font in fonts:
-        police_list.insert(ind, font)
+    for fonte in fonts:
+        police_list.insert(ind, fonte)
         ind += 1
     ttk.Button(boutons, text='Choisir cette police', command=lambda:
                police.set(police_list.get(ACTIVE))).grid(
-                   column=0, row=2, sticky=(E,W))
+                   column=0, row=2, sticky=(E, W))
     ttk.Label(boutons, text='\nTaille de caractères\n',
-              background='#C3C4C9').grid(column=0, row=3, sticky=(E,W))
-    p_size = Spinbox(boutons, from_=4, to =40, state='readonly', textvariable
-                       =pol_size)
+              background='#C3C4C9').grid(column=0, row=3, sticky=(E, W))
+    p_size = Spinbox(boutons, from_=4, to=40, state='readonly',
+                     textvariable=pol_size)
     p_size.grid(column=0, row=4)
     ttk.Label(boutons, text='\nNombre de lignes\n',
-          background='#C3C4C9').grid(column=0, row=5, sticky=(E,W))
-    nbL = Spinbox(boutons, from_=10, to =400, state='readonly', textvariable
-                       =nb_line)
+              background='#C3C4C9').grid(column=0, row=5, sticky=(E, W))
+    nbL = Spinbox(boutons, from_=10, to=400, state='readonly',
+                  textvariable=nb_line)
     nbL.grid(column=0, row=6)
     ttk.Label(boutons, text='\nNombre de colonnes\n',
-          background='#C3C4C9').grid(column=0, row=7, sticky=(E,W))
-    nbC = Spinbox(boutons, from_=10, to =600, state='readonly', textvariable
-                       =nb_col)
+              background='#C3C4C9').grid(column=0, row=7, sticky=(E, W))
+    nbC = Spinbox(boutons, from_=10, to=600, state='readonly',
+                  textvariable=nb_col)
     nbC.grid(column=0, row=8)
     ttk.Label(boutons, text='\nChoix de couleurs\n',
-              background='#C3C4C9').grid(column=0, row=9, sticky=(E,W))    
+              background='#C3C4C9').grid(column=0, row=9, sticky=(E, W))
     ttk.Button(boutons, text='Couleur de fond', command=bg_coul).grid(
-        column=0, row=10, sticky=(E,W))
+               column=0, row=10, sticky=(E, W))
     ttk.Button(boutons, text='Couleur des caractères', command=pol_coul).grid(
-        column=0, row=11, sticky=(E,W))
+               column=0, row=11, sticky=(E, W))
     ttk.Button(boutons, text='Couleur du curseur', command=now_coul).grid(
-        column=0, row=12, sticky=(E,W))
+               column=0, row=12, sticky=(E, W))
     ttk.Button(boutons, text='Frappes correctes', command=good_coul
-        ).grid(column=0, row=13, sticky=(E,W))
+               ).grid(column=0, row=13, sticky=(E, W))
     ttk.Button(boutons, text='Frappes érronées', command=wrong_coul).grid(
-        column=0, row=14, sticky=(E,W))
+               column=0, row=14, sticky=(E, W))
     ttk.Button(boutons, text='Résultat moyen', command=med_coul).grid(
-        column=0, row=15, sticky=(E,W))
+               column=0, row=15, sticky=(E, W))
     ttk.Label(boutons, text='\nPrévisualisation\n',
-              background='#C3C4C9').grid(column=0, row=16, sticky=(E,W))
+              background='#C3C4C9').grid(column=0, row=16, sticky=(E, W))
     ttk.Button(boutons, text='Voyons voir', command=preview).grid(
-        column=0, row=17, sticky=(E,W))
+               column=0, row=17, sticky=(E, W))
     ttk.Label(boutons, text='\nSauvegarde préferences\n',
-              background='#C3C4C9').grid(column=0, row=18, sticky=(E,W))
+              background='#C3C4C9').grid(column=0, row=18, sticky=(E, W))
     ttk.Button(boutons, text='Enregistrer', command=save_pref).grid(
-        column=0, row=19, sticky=(E,W))
+               column=0, row=19, sticky=(E, W))
     ttk.Button(boutons, text='Quitter préference', command=page_reload).grid(
-        column=0, row=20, sticky=(E,W))
+               column=0, row=20, sticky=(E, W))
     protected.set(True)
     affichage(text)
 
@@ -631,7 +663,7 @@ root = Tk()
 root.title("DactyloPy")
 try:
     root.iconbitmap('TW.ico')
-except:
+except Exception:
     root.iconbitmap('@TW.xbm')
 else: pass
 root.option_add('*tearOff', FALSE)
@@ -682,7 +714,7 @@ menu_file.add_command(command=chargement, label='Choisir un texte')
 menu_file.add_cascade(menu=menu_opened, label='Récemment ouverts')
 menu_file.add_cascade(menu=menu_edit, label='Édition')
 menu_edit.add_command(command=edit_mode, label='Mode Édition')
-menu_edit.add_command(command=sup_retour, label='Supprimer les retours en trop')
+menu_edit.add_command(command=sup_retour, label='Supprime les retours en trop')
 menu_edit.add_command(command=record, label='Enregistrer')
 menu_file.add_separator()
 menu_file.add_command(label='Quitter', command=root.quit)
@@ -696,9 +728,9 @@ root['menu'] = menubar
 
 page = Text(root, width=nb_line.get(), height=nb_col.get(),
             wrap=WORD, bg=col_bg.get(), font=(police.get(), pol_size.get()))
-page.grid(column=0, row=0, sticky=(N,W,E,S))
+page.grid(column=0, row=0, sticky=(N, W, E, S))
 sb = ttk.Scrollbar(root, orient=VERTICAL, command=page.yview)
-sb.grid(column=1, row=0, sticky=(N,S))
+sb.grid(column=1, row=0, sticky=(N, S))
 page['yscrollcommand'] = sb.set
 page.mark_set("ici", INSERT)
 page.tag_config('now', background=col_now.get())
@@ -716,7 +748,7 @@ page.bind('<ButtonRelease>', selection)
 page.bind('<Escape>', stop_chrono)
 
 status_bar = ttk.Frame(root, borderwidth=1, relief=SUNKEN)
-status_bar.grid(column=0, row=1, sticky=(E,W), columnspan=3)
+status_bar.grid(column=0, row=1, sticky=(E, W), columnspan=3)
 info1 = ttk.Label(status_bar, text="Nombre de frappes: ")
 info1.grid(column=0, row=0, sticky=(W))
 nb_frappe = ttk.Label(status_bar, textvariable=frappes)
@@ -740,10 +772,10 @@ try:
     with io.open('accueil.txt', 'r', encoding='utf8') as text:
         text = text.read()
     status.set('accueil')
-except:
+except Exception:
     text = """Bienvenue dans DactyloPy
 
-    Créez ou charger un profil ou sélectionnez un texte et commencez à taper."""
+    Créez, charger un profil ou sélectionnez un texte et commencez à taper."""
 affichage(text)
 
 root.mainloop()
