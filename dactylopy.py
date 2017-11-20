@@ -26,17 +26,21 @@ from tkinter import colorchooser
 def pickle_load():
     """Charge la sauvegarde et renvoi un dictionnaire"""
     try:
-        with open('save.pkl', 'rb') as save_file:
+        with open('.save.pkl', 'rb') as save_file:
             repertoire = pickle.load(save_file)
     except FileNotFoundError:
-        repertoire = {pseudo.get(): {'text': {}, 'score': 0}}
-        pickle_write(repertoire)
+        try:
+            with open('save.pkl', 'rb') as save_file:
+                repertoire = pickle.load(save_file)
+        except FileNotFoundError:
+            repertoire = {pseudo.get(): {'text': {}, 'score': 0}}
+            pickle_write(repertoire)
     return repertoire
 
 
 def pickle_write(repertoire):
     """Mise à jour de la sauvegarde"""
-    with open('save.pkl', 'wb') as save_file:
+    with open('.save.pkl', 'wb') as save_file:
         pickle.dump(repertoire, save_file)
 
 
@@ -564,11 +568,11 @@ def classic_preset():
 def dark_preset():
     """preset de préférences 2"""
     col_bg.set('black')
-    col_pol.set('white')
-    col_now.set('#C3C4C9')
-    col_good.set('#C3C4C9')
+    col_pol.set('#feab16')
+    col_now.set('#2636ac')
+    col_good.set('#61a900')
     col_wrong.set('red')
-    col_med.set('#FF9903')
+    col_med.set('#e059ff')
     police.set('Arial')
     pol_size.set(12)
     nb_line.set(85)
