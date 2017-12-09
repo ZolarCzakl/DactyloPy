@@ -230,8 +230,19 @@ def selection(event):
     if protected.get() or status.get() == 'edit': pass
     else:
         try:
-            page.get(SEL_FIRST, SEL_LAST)
-            text = 'Utiliser cette sélection pour votre entraînement?'
+            nb_char = len(page.get(SEL_FIRST, SEL_LAST))
+            repertoire = pickle_load()
+            score = repertoire[pseudo.get()]['score']
+            if not score:
+                score = 3
+            estimation = nb_char // score
+            if estimation > 90:
+                estimation = int(estimation // 60)
+            else:
+                estimation = 1
+            text = 'Utiliser cette sélection pour votre entraînement?\n'
+            text += 'Nombre de caractères de la sélection = {}'.format(nb_char)
+            text += '\nEnviron {} min'.format(estimation)
             answer = messagebox.askyesno('selection', text, icon='question')
             if answer:
                 debut = page.index(SEL_FIRST)
@@ -674,7 +685,7 @@ root.option_add('*tearOff', FALSE)
 
 fonts = list(font.families())
 fonts.sort()
-preferenece = {}
+#preferenece = {}
 error_collec = {}
 starting = BooleanVar()
 pop_up = BooleanVar()
@@ -705,7 +716,8 @@ pop_up.set(True)
 protected.set(True)
 input_mode.set(False)
 pseudo.set('Anonyme')
-classic_preset()
+dark_preset()
+
 
 menubar = Menu(root)
 menu_file = Menu(menubar)
@@ -730,9 +742,9 @@ menu_pref.add_command(command=classic_preset, label='Thème classique')
 menu_pref.add_command(command=dark_preset, label='Thème sombre')
 root['menu'] = menubar
 
-page = Text(root, width=nb_line.get(), height=nb_col.get(),
-            wrap=WORD, bg=col_bg.get(), font=(police.get(), pol_size.get()))
+page = Text(root, wrap=WORD)
 page.grid(column=0, row=0, sticky=(N, W, E, S))
+preview()
 sb = ttk.Scrollbar(root, orient=VERTICAL, command=page.yview)
 sb.grid(column=1, row=0, sticky=(N, S))
 page['yscrollcommand'] = sb.set
